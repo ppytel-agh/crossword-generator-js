@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8"/>
-        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-        <style>    
+	<head>
+		<meta charset="UTF-8"/>
+		<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+		<style>    
             #crossword_container > div{
                 margin: auto;
             }
@@ -24,31 +24,59 @@
                 margin: 0px;
                 transform: translateY(-50%);
             }
-        </style>
-    </head>
-    <body>
-        <h1>Generator krzyżówki ze wspólną kolumną</h1>
-        <div>
-            <label for="password_input">Hasło</label>
-            <input id="password_input" type="text" name="crossword_password"/>
-            <button id="init_crossword_form">Inicjuj</button>
-            <button id="change_crossword_password" style="display: none;">Zmień</button>
-        </div>
-        <hr/>
-        <div id="crossword_horizontal_fields"></div>
-        <hr/>
-        <div id="crossword_container"></div>
-        <script>
+		</style>
+	</head>
+	<body>
+		<h1>Generator krzyżówki ze wspólną kolumną</h1>
+		<textarea id="data_feed"></textarea><button id="generate_from_feed">Przetwórz</button>
+		<hr/>
+		<div>
+			<label for="password_input">Hasło</label>
+			<input id="password_input" type="text" name="crossword_password"/>
+			<button id="init_crossword_form">Inicjuj</button>
+			<button id="change_crossword_password" style="display: none;">Zmień</button>
+		</div>
+		<hr/>
+		<div id="crossword_horizontal_fields"></div>
+		<hr/>
+		<div id="crossword_container"></div>
+		<div>
+			<div>
+				<label for="image_width_input">Szerokość obrazka</label><input type="text" id="image_width_input"/><br/>
+				<label for="font_name_input">Font</label>
+				<input type="text" id="font_name_input" value="Arial"/>
+				<br/>
+				<label for="font_size_input">Rozmiar czcionki</label>
+				<input type="text" id="font_size_input" value="11em"/>
+				<br/>
+				<label for="center_color_pick">Kolor środkowej kolumny</label>
+				<input id="center_color_pick" type="color" value="#dd84aa"/><br/>
+				<button id="save_image">Zapisz obrazek</button>
+				<a id="save_link" download="krzyzowka.png" style="display:none;"></a>
+			</div>
+			<div style="text-align:center;">
+				<canvas id="crossword_render" style="height: 90vh;"/>
+			</div>
+		</div>
+		<script>
             var crosswordData = {};
             $('#init_crossword_form').click(initCrosswordForm);
             $('#change_crossword_password').click(changeCrosswordPassword);
             $('body').on('change', '.crossword-row-input', crosswordRowInput);
             $('body').on('change', '.crossword-row-position-select', crosswordRowPosition);
+			var initialWidth = Math.floor(window.innerWidth*0.9/10)*10;
+			$('#image_width_input').val(initialWidth);
+			$('#save_image').click(function(){
+				var imageUrl = document.getElementById('crossword_render').toDataURL();
+				var saveAnchor = $('#save_link')[0];
+				saveAnchor.href= imageUrl;
+				saveAnchor.click();
+			});
 
             function renderCrossword() {
-                var passwordLength = crosswordData.password.length;
-                var cellSize = Math.floor(window.innerHeight / passwordLength);
-                var crosswordHeight = cellSize * passwordLength;
+				var canvasElement = document.getElementById('crossword_render');
+				var canvas2d = canvasElement.getContext('2d');			
+				
                 var crosswordSpanLeft = 0;
                 var crosswordSpanRight = 0;
                 for (var letterIndex in crosswordData.letters) {
@@ -65,24 +93,39 @@
                         }
                     }
                 }
-                var crosswordSpan = parseInt(crosswordSpanLeft) + 1 + parseInt(crosswordSpanRight);
-                var crosswordWidth = crosswordSpan * cellSize;
-                var render = '<div style="margin:auto; width: ' + crosswordWidth + 'px; height: ' + crosswordHeight + 'px; font-size: ' + (cellSize / 2) + 'px;">';
+                var crosswordSpan = parseInt(crosswordSpanLeft) + 1 + parseInt(crosswordSpanRight);									
+					
+                var passwordLength = crosswordData.password.length;
+				var canvasWidth = parseInt($('#image_width_input').val());
+                var cellSize = Math.floor(canvasWidth / crosswordSpan);	
+				var halfCell = Math.floor(cellSize/2);				
+				var leftMargin = Math.floor((canvasWidth - (crosswordSpan*cellSize))/2);
+				var canvasHeight = cellSize * passwordLength + 20;
+				canvasElement.width = canvasWidth;
+				canvasElement.height = canvasHeight;
+				canvas2d.clearRect(0,0,canvasWidth,canvasHeight);
+				
+				var fontName= $('#font_name_input').val();
+				var fontSize = $('#font_size_input').val();
+				var fontStyle = fontSize+' '+fontName;
+				canvas2d.font = fontStyle;
+				canvas2d.textAlign = 'center';
+				canvas2d.textBaseline = 'middle';
+				
+				var passwordCellsFill = document.getElementById('center_color_pick').value;			
+							
                 for (var i = 0; i < passwordLength; i++) {
-                    render += '<div class="cells-row" style="width:100%; height: ' + cellSize + 'px;">';
                     for (var j = 0; j < crosswordSpan; j++) {
-                        var cellClass = 'cell';
-                        var cellStyle = 'width: ' + cellSize + 'px; height: ' + cellSize + 'px; padding-top: ' + (cellSize / 2) + 'px; box-sizing: border-box;';
-                        var cellContent = '';
-
-                        var cellContainsLetter = false;
+					
                         var letter = undefined;
+						var cellContainsLetter= false;
+						var cellContainsPassword = false;
                         var crosswordletterData = crosswordData.letters[i];
                         if (j == crosswordSpanLeft) {
                             if (crosswordletterData.letter != ' ') {
-                                cellContainsLetter = true;
+								cellContainsPassword = true;
+								cellContainsLetter = true;
                                 letter = crosswordletterData.letter;
-                                cellClass += ' password-cell';
                             }
                         } else {
                             if (crosswordletterData.wordLetterPosition != undefined) {
@@ -95,17 +138,23 @@
                                 }
                             }
                         }
-
+						
+						var offsetLeft = leftMargin + (j*cellSize);
+						var offsetTop = 10 + (i*cellSize);
+						
+						if(cellContainsPassword){
+							canvas2d.fillStyle = passwordCellsFill;
+							canvas2d.fillRect(offsetLeft+1,offsetTop+1,cellSize-1,cellSize-1);							
+						}
                         if (cellContainsLetter) {
-                            cellClass += ' letter-cell';
-                            cellContent = '<p>' + letter + '</p>';
+							for(var k=0;k<5;k++){
+								canvas2d.strokeRect(offsetLeft,offsetTop,cellSize,cellSize);	
+							}						
+							canvas2d.fillStyle = 'black';							
+							canvas2d.fillText(letter, offsetLeft+halfCell,offsetTop+halfCell);
                         }
-                        render += '<div class="' + cellClass + '" style="' + cellStyle + '">' + cellContent + '</div>';
                     }
-                    render += '</div>';
                 }
-                render += '</div>';
-                $('#crossword_container').html(render);
             }
 
             function crosswordRowPosition() {
@@ -175,7 +224,7 @@
                     var letter = passwordLetters[i];
                     crosswordData.letters[i] = {letter: letter};
                     if (letter != ' ') {
-                        formHtml += '<div class="crowssword-row-wrapper" letter_index="' + i + '"><label>Słowo na literę "' + letter + '"</label><input type="text" class="crossword-row-input"/><select class="crossword-row-position-select" style="display:none;"></select></div>';
+                        formHtml += '<div class="crowssword-row-wrapper" letter_index="' + i + '"><label>Słowo na literę "' + letter + '"</label><input type="text" class="crossword-row-input"/><select class="crossword-row-position-select" style="display:none;"/></div>';
                     } else {
                         formHtml += '<br/>';
                     }
@@ -206,6 +255,7 @@
                 document.getElementById('change_crossword_password').style.display = "none";
                 document.getElementById('init_crossword_form').style.display = "inline";
             }
-        </script>
-    </body>
-</html>
+						
+						</script>
+					</body>
+				</html>
