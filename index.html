@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <style>    
+            #crossword_container > div{
+                margin: auto;
+            }
+            .cells-row{
+                width: 100%;
+            }
+            .cell{
+                float: left;
+            }
+            .password-cell{
+                background-color: orange;
+            }
+            .letter-cell{
+                border: 1px solid black;
+                text-align:center;
+            }
+            .letter-cell > p{
+                margin: 0px;
+                transform: translateY(-50%);
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Generator krzyżówki ze wspólną kolumną</h1>
+        <div>
+            <label for="password_input">Hasło</label>
+            <input id="password_input" type="text" name="crossword_password"/>
+            <button id="init_crossword_form">Inicjuj</button>
+            <button id="change_crossword_password" style="display: none;">Zmień</button>
+        </div>
+        <hr/>
+        <div id="crossword_horizontal_fields"></div>
+        <hr/>
+        <div id="crossword_container"></div>
+        <script>
+            var crosswordData = {};
+            $('#init_crossword_form').click(initCrosswordForm);
+            $('#change_crossword_password').click(changeCrosswordPassword);
+            $('body').on('change', '.crossword-row-input', crosswordRowInput);
+            $('body').on('change', '.crossword-row-position-select', crosswordRowPosition);
+
+            function renderCrossword() {
+                var passwordLength = crosswordData.password.length;
+                var cellSize = Math.floor(window.innerHeight / passwordLength);
+                var crosswordHeight = cellSize * passwordLength;
+                var crosswordSpanLeft = 0;
+                var crosswordSpanRight = 0;
+                for (var letterIndex in crosswordData.letters) {
+                    var crosswordletterData = crosswordData.letters[letterIndex];
+                    if (crosswordletterData.wordLetterPosition != undefined) {
+                        var assignedWordLength = crosswordletterData.assignedWord.length;
+                        var assignedWordSpanLeft = crosswordletterData.wordLetterPosition;
+                        if (assignedWordSpanLeft > crosswordSpanLeft) {
+                            crosswordSpanLeft = assignedWordSpanLeft;
+                        }
+                        var assignedWordSpanRight = assignedWordLength - crosswordletterData.wordLetterPosition - 1;
+                        if (assignedWordSpanRight > crosswordSpanRight) {
+                            crosswordSpanRight = assignedWordSpanRight;
+                        }
+                    }
+                }
+                var crosswordSpan = parseInt(crosswordSpanLeft) + 1 + parseInt(crosswordSpanRight);
+                var crosswordWidth = crosswordSpan * cellSize;
+                var render = '<div style="margin:auto; width: ' + crosswordWidth + 'px; height: ' + crosswordHeight + 'px; font-size: ' + (cellSize / 2) + 'px;">';
+                for (var i = 0; i < passwordLength; i++) {
+                    render += '<div class="cells-row" style="width:100%; height: ' + cellSize + 'px;">';
+                    for (var j = 0; j < crosswordSpan; j++) {
+                        var cellClass = 'cell';
+                        var cellStyle = 'width: ' + cellSize + 'px; height: ' + cellSize + 'px; padding-top: ' + (cellSize / 2) + 'px; box-sizing: border-box;';
+                        var cellContent = '';
+
+                        var cellContainsLetter = false;
+                        var letter = undefined;
+                        var crosswordletterData = crosswordData.letters[i];
+                        if (j == crosswordSpanLeft) {
+                            if (crosswordletterData.letter != ' ') {
+                                cellContainsLetter = true;
+                                letter = crosswordletterData.letter;
+                                cellClass += ' password-cell';
+                            }
+                        } else {
+                            if (crosswordletterData.wordLetterPosition != undefined) {
+                                var a = crosswordSpanLeft - crosswordletterData.wordLetterPosition;
+                                var b = a + crosswordletterData.assignedWord.length;
+                                if (j >= a && j < b) {
+                                    cellContainsLetter = true;
+                                    var letterIndex = j - a;
+                                    letter = crosswordletterData.assignedWord[letterIndex];
+                                }
+                            }
+                        }
+
+                        if (cellContainsLetter) {
+                            cellClass += ' letter-cell';
+                            cellContent = '<p>' + letter + '</p>';
+                        }
+                        render += '<div class="' + cellClass + '" style="' + cellStyle + '">' + cellContent + '</div>';
+                    }
+                    render += '</div>';
+                }
+                render += '</div>';
+                $('#crossword_container').html(render);
+            }
+
+            function crosswordRowPosition() {
+                var inputJQ = $(this);
+                var wrapperJQ = inputJQ.closest('.crowssword-row-wrapper');
+                var letterIndex = parseInt(wrapperJQ.attr('letter_index'));
+                var crosswordletterData = crosswordData.letters[letterIndex];
+                var position = inputJQ.val();
+                console.log(position);
+                if (position != '-1') {
+                    crosswordletterData.wordLetterPosition = parseInt(position);
+                } else {
+                    crosswordletterData.wordLetterPosition = undefined;
+                }
+                renderCrossword();
+            }
+
+            function crosswordRowInput() {
+                var inputJQ = $(this);
+                var wrapperJQ = inputJQ.closest('.crowssword-row-wrapper');
+                var letterIndex = parseInt(wrapperJQ.attr('letter_index'));
+                var crosswordletterData = crosswordData.letters[letterIndex];
+                var rowWord = inputJQ.val().toLowerCase();
+                var occurences = [];
+                for (var i in rowWord.split('')) {
+                    var letter = rowWord[i];
+                    if (letter == crosswordletterData.letter) {
+                        occurences.push(i);
+                    }
+                }
+                var crosswordPositionSelectJQ = wrapperJQ.find('.crossword-row-position-select');
+                if (occurences.length > 0) {
+                    crosswordletterData.assignedWord = rowWord;
+                    crosswordletterData.letterOccurences = occurences;
+                    if (occurences.length == 1) {
+                        crosswordletterData.wordLetterPosition = occurences[0];
+                        crosswordPositionSelectJQ.val('');
+                        crosswordPositionSelectJQ.html('');
+                        crosswordPositionSelectJQ.hide();
+
+                    } else {
+                        crosswordletterData.wordLetterPosition = undefined;
+                        var positionOptions = '<option value="-1">-- wybierz --</option>';
+                        for (var position of occurences) {
+                            var naturalLetterPosition = parseInt(position) + 1;
+                            positionOptions += '<option value="' + position + '">litera nr ' + naturalLetterPosition + '</option>';
+                        }
+                        crosswordPositionSelectJQ.html(positionOptions);
+                        crosswordPositionSelectJQ.val('-1');
+                        crosswordPositionSelectJQ.show();
+                    }
+                } else {
+                    inputJQ.val('');
+                    crosswordPositionSelectJQ.val('');
+                    crosswordPositionSelectJQ.html('');
+                    crosswordPositionSelectJQ.hide();
+                }
+                renderCrossword();
+            }
+
+            function getCrosswordFormHtml(password) {
+                var formHtml = '';
+                crosswordData.password = password;
+                crosswordData.letters = [];
+                var passwordLetters = password.split('');
+                for (var i in passwordLetters) {
+                    var letter = passwordLetters[i];
+                    crosswordData.letters[i] = {letter: letter};
+                    if (letter != ' ') {
+                        formHtml += '<div class="crowssword-row-wrapper" letter_index="' + i + '"><label>Słowo na literę "' + letter + '"</label><input type="text" class="crossword-row-input"/><select class="crossword-row-position-select" style="display:none;"></select></div>';
+                    } else {
+                        formHtml += '<br/>';
+                    }
+                }
+                renderCrossword();
+                return formHtml;
+            }
+
+            function initCrosswordForm() {
+                var passwordInputJQ = $('#password_input');
+                var password = passwordInputJQ.val().toLowerCase();
+                passwordInputJQ.attr('disabled', 'disabled');
+
+                $('#init_crossword_form').hide();
+                $('#change_crossword_password').show();
+
+                var crosswordFormHtml = getCrosswordFormHtml(password);
+                $('#crossword_horizontal_fields').html(crosswordFormHtml);
+            }
+
+            function changeCrosswordPassword() {
+                crosswordData = {};
+                var passwordInputElement = document.getElementById('password_input');
+                passwordInputElement.value = "";
+                passwordInputElement.disabled = false;
+                document.getElementById('crossword_horizontal_fields').innerHTML = "";
+                document.getElementById('crossword_container').innerHTML = "";
+                document.getElementById('change_crossword_password').style.display = "none";
+                document.getElementById('init_crossword_form').style.display = "inline";
+            }
+        </script>
+    </body>
+</html>
