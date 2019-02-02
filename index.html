@@ -2,34 +2,10 @@
 <html>
     <head>
         <meta charset="UTF-8"/>
-        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-        <style>    
-            #crossword_container > div{
-                margin: auto;
-            }
-            .cells-row{
-                width: 100%;
-            }
-            .cell{
-                float: left;
-            }
-            .password-cell{
-                background-color: orange;
-            }
-            .letter-cell{
-                border: 1px solid black;
-                text-align:center;
-            }
-            .letter-cell > p{
-                margin: 0px;
-                transform: translateY(-50%);
-            }
-        </style>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>        
     </head>
     <body>
-        <h1>Generator krzyżówki ze wspólną kolumną</h1>
-        <textarea id="data_feed"></textarea><button id="generate_from_feed">Przetwórz</button>
-        <hr/>
+        <h1>Generator krzyżówki ze wspólną kolumną</h1>        
         <div>
             <label for="password_input">Hasło</label>
             <input id="password_input" type="text" name="crossword_password"/>
@@ -51,11 +27,14 @@
                 <br/>
                 <label for="center_color_pick">Kolor środkowej kolumny</label>
                 <input id="center_color_pick" type="color" value="#dd84aa"/><br/>
-                <button id="save_image">Zapisz obrazek</button>
-                <a id="save_link" download="krzyzowka.png" style="display:none;"></a>
+
             </div>
             <div style="text-align:center;">
                 <canvas id="crossword_render" style="height: 90vh;"/>
+            </div>
+            <div>
+                <button id="save_image">Zapisz obrazek</button>
+                <a id="save_link" download="krzyzowka.png" style="display:none;"></a>
             </div>
         </div>
         <script>
