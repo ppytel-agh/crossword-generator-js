@@ -18,18 +18,24 @@
         <div id="crossword_container"></div>
         <div>
             <div>
-                <label for="image_width_input">Szerokość obrazka</label><input type="text" id="image_width_input"/><br/>
+                <label for="image_width_input">Szerokość obrazka</label><input type="text" id="image_width_input" value="1080"/><br/>
                 <label for="font_name_input">Font</label>
                 <input type="text" id="font_name_input" value="Arial"/>
                 <br/>
                 <label for="font_size_input">Rozmiar czcionki</label>
-                <input type="text" id="font_size_input" value="11em"/>
+                <input type="text" id="font_size_input" value="50"/>
+                <select id="font_units">
+                    <option value="px" selected>px</option>
+                    <option value="em">em</option>
+                    <option value="%">%</option>
+                </select>
                 <br/>
                 <label for="center_color_pick">Kolor środkowej kolumny</label>
                 <input id="center_color_pick" type="color" value="#dd84aa"/><br/>
-
+                <button id="render_crossword">renderuj</button>
             </div>
             <div style="text-align:center;">
+                <p>PODGLĄD (MOŻE RÓŻNIĆ SIĘ OD RZECZYWISTEGO OBRAZKA)</p>
                 <canvas id="crossword_render" style="height: 90vh;"/>
             </div>
             <div>
@@ -51,6 +57,7 @@
                 saveAnchor.href = imageUrl;
                 saveAnchor.click();
             });
+            $('#render_crossword').click(renderCrossword);
 
             function renderCrossword() {
                 var canvasElement = document.getElementById('crossword_render');
@@ -85,7 +92,7 @@
                 canvas2d.clearRect(0, 0, canvasWidth, canvasHeight);
 
                 var fontName = $('#font_name_input').val();
-                var fontSize = $('#font_size_input').val();
+                var fontSize = $('#font_size_input').val()+$('#font_units').val();
                 var fontStyle = fontSize + ' ' + fontName;
                 canvas2d.font = fontStyle;
                 canvas2d.textAlign = 'center';
@@ -102,8 +109,8 @@
                         var crosswordletterData = crosswordData.letters[i];
                         if (j == crosswordSpanLeft) {
                             if (crosswordletterData.letter != ' ') {
-                                cellContainsPassword = true;
                                 cellContainsLetter = true;
+                                cellContainsPassword = true;
                                 letter = crosswordletterData.letter;
                             }
                         } else {
@@ -121,16 +128,19 @@
                         var offsetLeft = leftMargin + (j * cellSize);
                         var offsetTop = 10 + (i * cellSize);
 
-                        if (cellContainsPassword) {
-                            canvas2d.fillStyle = passwordCellsFill;
-                            canvas2d.fillRect(offsetLeft + 1, offsetTop + 1, cellSize - 1, cellSize - 1);
-                        }
                         if (cellContainsLetter) {
+                            if (cellContainsPassword) {
+                                canvas2d.fillStyle = passwordCellsFill;
+                            } else {
+                                canvas2d.fillStyle = "white";
+                            }
+                            canvas2d.fillRect(offsetLeft + 1, offsetTop + 1, cellSize - 1, cellSize - 1);
                             for (var k = 0; k < 5; k++) {
                                 canvas2d.strokeRect(offsetLeft, offsetTop, cellSize, cellSize);
                             }
                             canvas2d.fillStyle = 'black';
-                            canvas2d.fillText(letter, offsetLeft + halfCell, offsetTop + halfCell);
+                            var renderLetter = letter.toUpperCase();
+                            canvas2d.fillText(renderLetter, offsetLeft + halfCell, offsetTop + halfCell);
                         }
                     }
                 }
@@ -148,7 +158,6 @@
                 } else {
                     crosswordletterData.wordLetterPosition = undefined;
                 }
-                renderCrossword();
             }
 
             function crosswordRowInput() {
@@ -191,7 +200,6 @@
                     crosswordPositionSelectJQ.html('');
                     crosswordPositionSelectJQ.hide();
                 }
-                renderCrossword();
             }
 
             function getCrosswordFormHtml(password) {
@@ -208,7 +216,6 @@
                         formHtml += '<br/>';
                     }
                 }
-                renderCrossword();
                 return formHtml;
             }
 
