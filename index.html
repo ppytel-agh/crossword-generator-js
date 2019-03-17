@@ -30,8 +30,10 @@
                     <option value="%">%</option>
                 </select>
                 <br/>
-                <label for="center_color_pick">Kolor środkowej kolumny</label>
+                <label for="center_color_pick">Kolor ramki środkowej kolumny</label>
                 <input id="center_color_pick" type="color" value="#dd84aa"/><br/>
+                <label for="grid_size">Rozmiar siatki</label>
+                <input id="grid_size" type="text" value="1"/><br/>
                 <button id="render_crossword">renderuj</button>
             </div>
             <div style="text-align:center;">
@@ -51,7 +53,7 @@
             $('body').on('change', '.crossword-row-position-select', crosswordRowPosition);
             var initialWidth = Math.floor(window.innerWidth * 0.9 / 10) * 10;
             $('#image_width_input').val(initialWidth);
-            $('#save_image').click(function() {
+            $('#save_image').click(function () {
                 var imageUrl = document.getElementById('crossword_render').toDataURL();
                 var saveAnchor = $('#save_link')[0];
                 saveAnchor.href = imageUrl;
@@ -92,15 +94,17 @@
                 canvas2d.clearRect(0, 0, canvasWidth, canvasHeight);
 
                 var fontName = $('#font_name_input').val();
-                var fontSize = $('#font_size_input').val()+$('#font_units').val();
+                var fontSize = $('#font_size_input').val() + $('#font_units').val();
                 var fontStyle = fontSize + ' ' + fontName;
                 canvas2d.font = fontStyle;
                 canvas2d.textAlign = 'center';
                 canvas2d.textBaseline = 'middle';
 
                 var passwordCellsFill = document.getElementById('center_color_pick').value;
+                canvas2d.lineWidth = document.getElementById('grid_size').value;
 
                 for (var i = 0; i < passwordLength; i++) {
+                    var offsetTop = 10 + (i * cellSize);
                     for (var j = 0; j < crosswordSpan; j++) {
 
                         var letter = undefined;
@@ -126,22 +130,25 @@
                         }
 
                         var offsetLeft = leftMargin + (j * cellSize);
-                        var offsetTop = 10 + (i * cellSize);
 
-                        if (cellContainsLetter) {
-                            if (cellContainsPassword) {
-                                canvas2d.fillStyle = passwordCellsFill;
-                            } else {
-                                canvas2d.fillStyle = "white";
-                            }
+                        if (cellContainsLetter) {                           
+                            canvas2d.fillStyle = "white";
                             canvas2d.fillRect(offsetLeft + 1, offsetTop + 1, cellSize - 1, cellSize - 1);
-                            for (var k = 0; k < 5; k++) {
-                                canvas2d.strokeRect(offsetLeft, offsetTop, cellSize, cellSize);
+                            if (!cellContainsPassword) {
+                                canvas2d.strokeStyle = "black";
+                                for (var k = 0; k < 5; k++) {
+                                    canvas2d.strokeRect(offsetLeft, offsetTop, cellSize, cellSize);
+                                }
                             }
                             canvas2d.fillStyle = 'black';
                             var renderLetter = letter.toUpperCase();
                             canvas2d.fillText(renderLetter, offsetLeft + halfCell, offsetTop + halfCell);
                         }
+                    }
+                    var offsetLeft = leftMargin + (crosswordSpanLeft * cellSize);
+                    canvas2d.strokeStyle = passwordCellsFill;
+                    for (var k = 0; k < 5; k++) {
+                        canvas2d.strokeRect(offsetLeft, offsetTop, cellSize, cellSize);
                     }
                 }
             }
