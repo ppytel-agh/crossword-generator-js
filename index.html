@@ -145,11 +145,13 @@
                             canvas2d.fillText(renderLetter, offsetLeft + halfCell, offsetTop + halfCell);
                         }
                     }
-                    var offsetLeft = leftMargin + (crosswordSpanLeft * cellSize);
-                    canvas2d.strokeStyle = passwordCellsFill;
-                    for (var k = 0; k < 5; k++) {
-                        canvas2d.strokeRect(offsetLeft, offsetTop, cellSize, cellSize);
-                    }
+					if(crosswordData.letters[i].letter != ' '){
+						var offsetLeft = leftMargin + (crosswordSpanLeft * cellSize);
+						canvas2d.strokeStyle = passwordCellsFill;
+						for (var k = 0; k < 5; k++) {
+							canvas2d.strokeRect(offsetLeft, offsetTop, cellSize, cellSize);
+						}
+					}
                 }
             }
 
