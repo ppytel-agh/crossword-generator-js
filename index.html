@@ -60,7 +60,7 @@
                 <a id="save_link" download="krzyzowka.png" style="display:none;"></a>
             </div>
         </div>
-        <script>            
+        <script>
             var crosswordData = {};
             $('#select_letter_input_mode').click(selectLetterInputMode);
             $('#change_letter_input_mode').click(changeLetterInputMode);
@@ -115,8 +115,7 @@
 
                 var fontName = $('#font_name_input').val();
                 var fontSize = $('#font_size_input').val() + $('#font_units').val();
-                var fontStyle = fontSize + ' ' + fontName;
-                canvas2d.font = fontStyle;
+                var fontSizeAndName = fontSize + ' ' + fontName;
                 canvas2d.textAlign = 'center';
                 canvas2d.textBaseline = 'middle';
 
@@ -159,6 +158,9 @@
                                 for (var k = 0; k < 5; k++) {
                                     canvas2d.strokeRect(offsetLeft, offsetTop, cellSize, cellSize);
                                 }
+                                canvas2d.font = fontSizeAndName;
+                            } else {
+                                canvas2d.font = 'bold ' + fontSizeAndName;
                             }
                             canvas2d.fillStyle = 'black';
                             var renderLetter = letter.toUpperCase();
@@ -247,29 +249,29 @@
                 }
                 return formHtml;
             }
-            
-            function selectLetterInputMode(){                            
+
+            function selectLetterInputMode() {
                 var value = $('#letter_input_mode').val();
-                $('#letter_input_mode').attr('disabled','disabled');
-                $('#select_letter_input_mode').hide();    
-                $('#change_letter_input_mode').show(); 
-                switch(value){
+                $('#letter_input_mode').attr('disabled', 'disabled');
+                $('#select_letter_input_mode').hide();
+                $('#change_letter_input_mode').show();
+                switch (value) {
                     case 'form':
-                        $('#json_init_wrapper').hide();                        
-                        $('#form_init_wrapper').show();                        
+                        $('#json_init_wrapper').hide();
+                        $('#form_init_wrapper').show();
                         break;
                     case 'json':
                         $('#form_init_wrapper').hide();
                         $('#json_init_wrapper').show();
-                }                   
+                }
             }
-            
-            function changeLetterInputMode(){
-                $('#json_init_wrapper').hide();    
-                $('#form_init_wrapper').hide();    
-                $('#select_letter_input_mode').show();    
-                $('#change_letter_input_mode').hide();    
-                $('#letter_input_mode').removeAttr('disabled');    
+
+            function changeLetterInputMode() {
+                $('#json_init_wrapper').hide();
+                $('#form_init_wrapper').hide();
+                $('#select_letter_input_mode').show();
+                $('#change_letter_input_mode').hide();
+                $('#letter_input_mode').removeAttr('disabled');
             }
 
             function initCrosswordForm() {
@@ -279,8 +281,8 @@
 
                 $('#init_crossword_form').hide();
                 $('#change_crossword_password').show();
-                
-                $('#change_letter_input_mode').attr('disabled','disabled');
+
+                $('#change_letter_input_mode').attr('disabled', 'disabled');
 
                 var crosswordFormHtml = getCrosswordFormHtml(password);
                 $('#crossword_horizontal_fields').html(crosswordFormHtml);
@@ -294,32 +296,32 @@
                 document.getElementById('crossword_horizontal_fields').innerHTML = "";
                 document.getElementById('change_crossword_password').style.display = "none";
                 document.getElementById('init_crossword_form').style.display = "inline";
-                
+
                 $('#change_letter_input_mode').removeAttr('disabled');
             }
-            
-            function generateLettersJSON(){
+
+            function generateLettersJSON() {
                 $('#letters_json_output').show();
                 var crosswordDataJSON = JSON.stringify(crosswordData);
                 $('#letters_json_output').text(crosswordDataJSON);
             }
-            
-            function initCrosswordJSON(){
+
+            function initCrosswordJSON() {
                 $('#change_crossword_json').show();
                 $('#init_crossword_json').hide();
-                $('#change_letter_input_mode').attr('disabled','disabled');
+                $('#change_letter_input_mode').attr('disabled', 'disabled');
                 var lettersData = $('#letters_data_json').val();
-                $('#letters_data_json').attr('disabled','disabled');
+                $('#letters_data_json').attr('disabled', 'disabled');
                 crosswordData = JSON.parse(lettersData);
                 renderCrossword();
             }
-            
-            function changeCrosswordJSON(){
+
+            function changeCrosswordJSON() {
                 $('#change_crossword_json').hide();
                 $('#init_crossword_json').show();
                 $('#change_letter_input_mode').removeAttr('disabled');
                 $('#letters_data_json').removeAttr('disabled');
-            } 
+            }
         </script>
     </body>
 </html>
